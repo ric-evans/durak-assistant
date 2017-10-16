@@ -22,6 +22,9 @@ import os
 class CardRecognition(object):
 
   training = []
+  trained = False
+  window_size = (200,250)#(1000,600)
+  window_delay = 1000
   
   ###########################################################
   # Utility code from 
@@ -51,55 +54,88 @@ class CardRecognition(object):
     blur = cv2.GaussianBlur(gray,(5,5),2 )
     thresh = cv2.adaptiveThreshold(blur,255,1,1,11,1)
     return thresh
-    
+
+  
+  def gaussblur(self,img):
+    return cv2.GaussianBlur(img,(5,5),2)
+
+  
   def imgdiff(self,img1,img2):
-    img1 = cv2.GaussianBlur(img1,(5,5),5)
-    img2 = cv2.GaussianBlur(img2,(5,5),5)    
+    img1 = self.gaussblur(img1)
+    img2 = self.gaussblur(img2)
     diff = cv2.absdiff(img1,img2)  
-    diff = cv2.GaussianBlur(diff,(5,5),5)    
-    flag, diff = cv2.threshold(diff, 200, 255, cv2.THRESH_BINARY) 
-    return np.sum(diff)  
+    diff = self.gaussblur(diff)   
+    flag, diff = cv2.threshold(diff, 200, 255, cv2.THRESH_BINARY)
+
+    return diff
+  
   
   def find_closest_card(self,img):
     features = self.preprocess(img)
-    return sorted(self.training, key=lambda x:self.imgdiff(x[1],features))[0][0]
+    top_hits = sorted(self.training, key=lambda x:np.sum(self.imgdiff(x[1],features)))
+    card = top_hits[0]
+    match = card[0]
+
+    # print card, match, and runners-up
+    cv2.imshow('card',cv2.resize(self.gaussblur(features),self.window_size))
+    cv2.waitKey(self.window_delay//4)
+    cv2.imshow('match',cv2.resize(self.gaussblur(card[1]),self.window_size))
+    cv2.waitKey(self.window_delay//4)
+    for i in range(3):
+      cv2.imshow('{}'.format(i+1),cv2.resize(self.gaussblur(top_hits[i+1][1]),self.window_size))
+      cv2.waitKey(self.window_delay//4)
+    cv2.imshow('diff',cv2.resize(self.imgdiff(card[1],features),self.window_size))
+    cv2.waitKey(self.window_delay*4)
     
-     
+    return match
+
+  
+  def bounding_box(self,iterable):
+    min_x, min_y = np.min(iterable[0], axis=0)
+    max_x, max_y = np.max(iterable[0], axis=0)
+    return np.array([(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)])
+
+
   ###############################################################################
   # Card Extraction
   ###############################################################################  
-  def extract_cards(self,im, numcards=4):
+  def extract_cards(self,im, numcards=1):
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray,(1,1),1000)
     flag, thresh = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY) 
-  
+    '''
+    if self.trained and numcards > 1:
+      cv2.imshow('image',cv2.resize(thresh,self.window_size))
+      cv2.waitKey(self.window_delay)
+      cv2.destroyAllWindows()
+    '''
     # edit for openCV 3+ 
     _, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-  
     contours = sorted(contours, key=cv2.contourArea,reverse=True)[:numcards]  
 
     warps = []
-    for card in contours:
-      try:
-        peri = cv2.arcLength(card,True)
-        approx = self.rectify(cv2.approxPolyDP(card,0.02*peri,True))
-      
-        # Show Cards Window
-        if self.training is not None and len(self.training) == 2*52:
-          print("showing card")
-          box = np.int0(approx)
-          cv2.drawContours(im,[box],0,(255,255,0),6)
-          imx = cv2.resize(im,(1000,600))
-          cv2.imshow('a',imx)
-          cv2.waitKey(1500)
-          
-        h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
-        
-        transform = cv2.getPerspectiveTransform(approx,h)
-        warps.append(cv2.warpPerspective(im,transform,(450,450)))
-      except:
-        print('No match')
-        
+    for card_contour in contours:
+      peri = cv2.arcLength(card_contour,True)
+      poly = cv2.approxPolyDP(card_contour,0.02*peri,True)
+      if len(poly) == 4: 
+        approx = self.rectify(poly)
+      else:
+        approx = self.rectify(self.bounding_box(poly))
+
+      # Show Cards Window
+      '''
+      if self.trained:# and False:
+        print("showing card")
+        box = np.int0(approx)
+        cv2.drawContours(im,[box],0,(255,255,0),6)
+        cv2.imshow('a',cv2.resize(im,self.window_size))
+        cv2.waitKey(self.window_delay)
+      ''' 
+      h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
+
+      transform = cv2.getPerspectiveTransform(approx,h)
+      warps.append(cv2.warpPerspective(im,transform,(450,450)))
+              
     return warps
 
   
@@ -112,9 +148,10 @@ class CardRecognition(object):
       num, suit = filename[0], filename[1]
       #print(filename)
       im = cv2.imread(os.path.join(path,filename))
-      c = self.extract_cards(im,1)[0]
+      c = self.extract_cards(im)[0]
       self.training.append( ((num,suit), self.preprocess(c)) )
 
+    self.trained = True
     '''
     labels = {}
     for line in open(training_labels_filename): 
@@ -142,13 +179,13 @@ class CardRecognition(object):
     if width < height:
       im = cv2.transpose(im)
       im = cv2.flip(im,1)
-  
+    '''
     # Debug: uncomment to see registered images
     for i,c in enumerate(self.extract_cards(im,num_cards)):
       card = self.find_closest_card(c)
       cv2.imshow(str(card),c)
-      cv2.waitKey(1000) 
-      
+      cv2.waitKey(self.window_delay//2) 
+    '''
     cards = [self.find_closest_card(c) for c in self.extract_cards(im,num_cards)]
     return cards
 
