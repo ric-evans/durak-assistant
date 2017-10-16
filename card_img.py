@@ -91,7 +91,7 @@ class CardRecognition(object):
           cv2.drawContours(im,[box],0,(255,255,0),6)
           imx = cv2.resize(im,(1000,600))
           cv2.imshow('a',imx)
-          cv2.waitKey(3000)
+          cv2.waitKey(1500)
           
         h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
         
@@ -165,6 +165,12 @@ class CardRecognition(object):
 #
 if __name__ == '__main__':
   cr = CardRecognition()
-  cards = cr.get_cards('test1.jpg', 4)
-  print(cards)
+
+  path = './test'
+  for filename in os.listdir(path):
+      print(filename)
+      cards = cr.get_cards(os.path.join(path,filename), 4)
+      print(cards)
+
+
     
