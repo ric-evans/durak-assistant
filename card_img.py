@@ -80,21 +80,26 @@ class CardRecognition(object):
 
     warps = []
     for card in contours:
-      peri = cv2.arcLength(card,True)
-      approx = self.rectify(cv2.approxPolyDP(card,0.02*peri,True))
-  
-      # Show Cards Window
-      #print("showing card")
-      #box = np.int0(approx)
-      #cv2.drawContours(im,[box],0,(255,255,0),6)
-      #imx = cv2.resize(im,(1000,600))
-      #cv2.imshow('a',imx)      
+      try:
+        peri = cv2.arcLength(card,True)
+        approx = self.rectify(cv2.approxPolyDP(card,0.02*peri,True))
       
-      h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
-  
-      transform = cv2.getPerspectiveTransform(approx,h)
-      warps.append(cv2.warpPerspective(im,transform,(450,450)))
-      
+        # Show Cards Window
+        if self.training is not None and len(self.training) == 2*52:
+          print("showing card")
+          box = np.int0(approx)
+          cv2.drawContours(im,[box],0,(255,255,0),6)
+          imx = cv2.resize(im,(1000,600))
+          cv2.imshow('a',imx)
+          cv2.waitKey(3000)
+          
+        h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
+        
+        transform = cv2.getPerspectiveTransform(approx,h)
+        warps.append(cv2.warpPerspective(im,transform,(450,450)))
+      except:
+        print('No match')
+        
     return warps
 
   
@@ -105,11 +110,11 @@ class CardRecognition(object):
     
     for filename in os.listdir(path):
       num, suit = filename[0], filename[1]
-      print(filename)
+      #print(filename)
       im = cv2.imread(os.path.join(path,filename))
       c = self.extract_cards(im,1)[0]
       self.training.append( ((num,suit), self.preprocess(c)) )
-      
+
     '''
     labels = {}
     for line in open(training_labels_filename): 
@@ -153,13 +158,13 @@ class CardRecognition(object):
   #
   def __init__(self, train_dir='./train_deck/'):
     self.set_training(train_dir)
-
+    print("Finished Training {} Cards".format(len(self.training)))
       
 #
 # MAIN
 #
 if __name__ == '__main__':
   cr = CardRecognition()
-  cards = cr.get_cards('test.jpg', 4)
+  cards = cr.get_cards('test1.jpg', 4)
   print(cards)
     
