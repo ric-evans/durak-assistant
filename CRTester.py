@@ -30,7 +30,7 @@ if __name__ == '__main__':
            filename = os.path.join(path,filename)
            if os.path.isfile(filename):
                print(filename)
-               cards = cr.get_cards(filename)
+               cards, _, _ = cr.test_cards(filename)
                print('Are these your cards?')
                print(cards)
        

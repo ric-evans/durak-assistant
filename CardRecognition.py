@@ -38,8 +38,9 @@ class CardRecognition(object):
 
   training = []
   trained = False
-  window_size = (200,250)#(1000,600)
-  window_delay = 50
+  scale = 1.5
+  window_size = ( int(200*scale), int(250*scale) )#(1000,600)
+  window_delay = 2000
   diffp_threshold = 10
 
   
@@ -115,14 +116,14 @@ class CardRecognition(object):
       return None
     else:
       # print card, match, and runners-up
-      cv2.imshow('card',cv2.resize(self.gaussblur(features),self.window_size))
+      cv2.imshow('input card',cv2.resize(self.gaussblur(features),self.window_size))
       cv2.waitKey(self.window_delay//4)
-      cv2.imshow('match',cv2.resize(self.gaussblur(card[1]),self.window_size))
+      cv2.imshow('library match',cv2.resize(self.gaussblur(card[1]),self.window_size))
       cv2.waitKey(self.window_delay//4)
       #for i in range(0):
       #  cv2.imshow('{}'.format(i+1),cv2.resize(self.gaussblur(top_hits[i+1][1]),self.window_size))
       #  cv2.waitKey(self.window_delay//4)
-      cv2.imshow('diff',cv2.resize(self.imgdiff(card[1],features),self.window_size))
+      cv2.imshow('difference', cv2.resize(self.imgdiff(card[1],features),self.window_size))
       cv2.waitKey(self.window_delay*4)
 
 
@@ -150,7 +151,7 @@ class CardRecognition(object):
     flag, thresh = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY) 
     
     if self.trained and numcards > 1:
-      cv2.imshow('image',cv2.resize(thresh,self.window_size))
+      cv2.imshow('threshold',cv2.resize(thresh,self.window_size))
       cv2.waitKey(self.window_delay)
       #cv2.destroyAllWindows()
     
@@ -181,7 +182,7 @@ class CardRecognition(object):
         #print("showing card")
         box = np.int0(approx)
         cv2.drawContours(im,[box],0,(255,255,0),6)
-        cv2.imshow('a',cv2.resize(im,self.window_size))
+        cv2.imshow('camera input',cv2.resize(im,self.window_size))
         cv2.waitKey(self.window_delay//10)
       #'''
 
