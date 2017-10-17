@@ -245,15 +245,21 @@ class CardRecognition(object):
     
     '''
     cards = [self.find_closest_card(c) for c in self.extract_cards(im)]
-
     cards = [c for c in cards if c is not None]
-    print('~~Results~~')
 
     if self.trained:
       cv2.waitKey(self.window_delay*4)
       cv2.destroyAllWindows()
 
-    key = self.testkey[ ntpath.basename(filename) ]
+    return cards
+
+
+  def test_cards(self,filename):
+    cards = self.get_cards(filename)
+
+    print('~~Results~~')
+    
+    key = self.testkey[ ntpath.basename(filename) ] * 1 # deep copy
 
     total = len(key)
     
@@ -267,14 +273,14 @@ class CardRecognition(object):
 
     print('non-matched: {}'.format(key))
 
-    acc = (1 - (len(key) / total) ) * 100
+    acc = (1 - (len(key) / total) )
     print('~~')
-    print('Accuracy: {:.3f}% ({}/{})'.format(acc,total-len(key),total))
+    print('Accuracy: {:.3f}% ({}/{})'.format(acc*100,total-len(key),total))
     print('------')
-    
-    return cards
 
-  
+    return cards, total, acc
+    
+    
   #
   # init
   #
