@@ -40,7 +40,8 @@ class CardRecognition(object):
   trained = False
   window_size = (200,250)#(1000,600)
   window_delay = 50
-  avgbrightness = 0 # TODO
+  diffp_threshold = 10
+
   
   ###########################################################
   # Utility code from 
@@ -110,7 +111,7 @@ class CardRecognition(object):
     
     print('diff: {:.3f}% ({}/{})'.format(diffp, diff, summed) )
 
-    if diffp > 10:
+    if diffp > self.diffp_threshold:
       return None
     else:
       # print card, match, and runners-up
@@ -143,7 +144,7 @@ class CardRecognition(object):
   # card recognition code from:
   # http://arnab.org/blog/so-i-suck-24-automating-card-games-using-opencv-and-python
   ###############################################################################  
-  def extract_cards(self,im, numcards=0, maxcards=10):
+  def extract_cards(self,im, numcards=0, bestmatch=False, maxcards=10):
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray,(1,1),1000)
     flag, thresh = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY) 
@@ -157,9 +158,11 @@ class CardRecognition(object):
     _, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
+    maxcards = min(len(contours), maxcards)
+    
     if self.trained:
-      for i in contours[:maxcards] : print('contour area: {}'.format(cv2.contourArea(i)))
+      for i in contours[:maxcards] :
+        print('contour area: {}'.format(cv2.contourArea(i)))
 
     #contours = contours[:numcards]  
 
@@ -186,7 +189,9 @@ class CardRecognition(object):
       transform = cv2.getPerspectiveTransform(approx,h)
       warps.append(cv2.warpPerspective(im,transform,(450,450)))
 
-    if numcards > 0 and len(warps) > numcards:
+    if bestmatch:
+      return warps[0]
+    elif numcards > 0 and len(warps) > numcards:
       return warps[:numcards]
     else:
       return warps
@@ -205,7 +210,7 @@ class CardRecognition(object):
         num, suit = filename[0], filename[1]
         #print(filename)
         im = cv2.imread(os.path.join(path,filename))
-        c = self.extract_cards(im)[0]
+        c = self.extract_cards(im,bestmatch=True)[0]
         c = self.preprocess(c)
         self.training.append( ((num,suit), c) )
         self.training.append( ((num,suit), self.rotate180(c)) )
@@ -283,7 +288,7 @@ class CardRecognition(object):
       print('Training...')
       self.set_training(train_dir, n=n)
       print('Pickling training file...')
-      pickle_training()
+      pickle_training(self.training)
 
     print("Done. Using {} Training Cards".format(len(self.training)))
 
