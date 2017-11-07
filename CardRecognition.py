@@ -40,9 +40,11 @@ class CardRecognition(object):
   trained = False
   scale = 1.5
   window_size = ( int(200*scale), int(250*scale) )#(1000,600)
-  window_delay = 2000
+  window_delay = 4000
   diffp_threshold = 10
 
+  do_display = False
+  do_prints = False
   
   ###########################################################
   # Utility code from 
@@ -109,22 +111,24 @@ class CardRecognition(object):
     diff = np.sum(self.imgdiff(card[1],features))
     summed = np.sum(features)
     diffp = (diff / summed) * 100
-    
-    print('diff: {:.3f}% ({}/{})'.format(diffp, diff, summed) )
+
+    if self.do_prints:
+      print('diff: {:.3f}% ({}/{})'.format(diffp, diff, summed) )
 
     if diffp > self.diffp_threshold:
       return None
     else:
-      # print card, match, and runners-up
-      cv2.imshow('input card',cv2.resize(self.gaussblur(features),self.window_size))
-      cv2.waitKey(self.window_delay//4)
-      cv2.imshow('library match',cv2.resize(self.gaussblur(card[1]),self.window_size))
-      cv2.waitKey(self.window_delay//4)
-      #for i in range(0):
-      #  cv2.imshow('{}'.format(i+1),cv2.resize(self.gaussblur(top_hits[i+1][1]),self.window_size))
-      #  cv2.waitKey(self.window_delay//4)
-      cv2.imshow('difference', cv2.resize(self.imgdiff(card[1],features),self.window_size))
-      cv2.waitKey(self.window_delay*4)
+      if self.do_display:
+        # print card, match, and runners-up
+        cv2.imshow('input card',cv2.resize(self.gaussblur(features),self.window_size))
+        cv2.waitKey(self.window_delay//4)
+        cv2.imshow('library match',cv2.resize(self.gaussblur(card[1]),self.window_size))
+        cv2.waitKey(self.window_delay//4)
+        #for i in range(0):
+        #  cv2.imshow('{}'.format(i+1),cv2.resize(self.gaussblur(top_hits[i+1][1]),self.window_size))
+        #  cv2.waitKey(self.window_delay//4)
+        cv2.imshow('difference', cv2.resize(self.imgdiff(card[1],features),self.window_size))
+        cv2.waitKey(self.window_delay*4)
 
 
       return match
@@ -145,25 +149,27 @@ class CardRecognition(object):
   # card recognition code from:
   # http://arnab.org/blog/so-i-suck-24-automating-card-games-using-opencv-and-python
   ###############################################################################  
-  def extract_cards(self,im, numcards=0, bestmatch=False, maxcards=10):
+  def extract_cards(self, im, numcards=0, bestmatch=False, maxcards=10):
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray,(1,1),1000)
     flag, thresh = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY) 
-    
-    if self.trained and numcards > 1:
-      cv2.imshow('threshold',cv2.resize(thresh,self.window_size))
-      cv2.waitKey(self.window_delay)
-      #cv2.destroyAllWindows()
+
+    if self.do_display:
+      if self.trained and numcards > 1:
+        cv2.imshow('threshold',cv2.resize(thresh,self.window_size))
+        cv2.waitKey(self.window_delay)
+        #cv2.destroyAllWindows()
     
     # edit for openCV 3+ 
     _, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
     maxcards = min(len(contours), maxcards)
-    
-    if self.trained:
-      for i in contours[:maxcards] :
-        print('contour area: {}'.format(cv2.contourArea(i)))
+
+    if self.do_prints:
+      if self.trained:
+        for i in contours[:maxcards] :
+          print('contour area: {}'.format(cv2.contourArea(i)))
 
     #contours = contours[:numcards]  
 
@@ -178,13 +184,14 @@ class CardRecognition(object):
 
       # Show Cards Window
       #'''
-      if self.trained:
-        #print("showing card")
-        box = np.int0(approx)
-        cv2.drawContours(im,[box],0,(255,255,0),6)
-        cv2.imshow('camera input',cv2.resize(im,self.window_size))
-        cv2.waitKey(self.window_delay//10)
-      #'''
+      if self.do_display:
+        if self.trained:
+          #print("showing card")
+          box = np.int0(approx)
+          cv2.drawContours(im,[box],0,(255,255,0),6)
+          cv2.imshow('camera input',cv2.resize(im,self.window_size))
+          cv2.waitKey(self.window_delay//10)
+          #'''
 
       h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
       transform = cv2.getPerspectiveTransform(approx,h)
@@ -215,8 +222,10 @@ class CardRecognition(object):
         c = self.preprocess(c)
         self.training.append( ((num,suit), c) )
         self.training.append( ((num,suit), self.rotate180(c)) )
-        
-        print('{}'.format(i+1))
+
+        if self.do_prints:
+          print('{}'.format(i+1))
+          
         if n and i > n:
           break
 
@@ -228,7 +237,8 @@ class CardRecognition(object):
   #
   def get_cards(self, filename):
 
-    print('------')
+    if self.do_prints:
+      print('------')
     im = cv2.imread(filename)
       
     width = im.shape[0]
@@ -238,12 +248,12 @@ class CardRecognition(object):
       im = cv2.flip(im,1)
     
     '''
-    # Debug: uncomment to see registered images
-    for i,c in enumerate(self.extract_cards(im,num_cards)):
-      card = self.find_closest_card(c)
-      cv2.imshow(str(card),c)
-      cv2.waitKey(self.window_delay//2) 
-    
+    if self.do_display:
+      # Debug: uncomment to see registered images
+      for i,c in enumerate(self.extract_cards(im,num_cards)):
+        card = self.find_closest_card(c)
+        cv2.imshow(str(card),c)
+        cv2.waitKey(self.window_delay//2) 
     '''
     cards = [self.find_closest_card(c) for c in self.extract_cards(im)]
     cards = [c for c in cards if c is not None]
@@ -258,7 +268,8 @@ class CardRecognition(object):
   def test_cards(self,filename):
     cards = self.get_cards(filename)
 
-    print('~~Results~~')
+    if self.do_prints:
+      print('~~Results~~')
     
     key = self.testkey[ ntpath.basename(filename) ] * 1 # deep copy
 
@@ -275,9 +286,10 @@ class CardRecognition(object):
     print('non-matched: {}'.format(key))
 
     acc = (1 - (len(key) / total) )
-    print('~~')
-    print('Accuracy: {:.3f}% ({}/{})'.format(acc*100,total-len(key),total))
-    print('------')
+    if self.do_prints:
+      print('~~')
+      print('Accuracy: {:.3f}% ({}/{})'.format(acc*100,total-len(key),total))
+      print('------')
 
     return cards, total, acc
     
