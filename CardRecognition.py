@@ -51,8 +51,8 @@ class CardRecognition(object):
   WIND_SIZE = ( int(200*SCALE), int(250*SCALE) )#(1000,600)
   WIND_DELAY = 4000
   DIFFP_THRESH_VAL = 10
-  DO_DISPLAY = False
-  DO_PRINTS = False
+  DO_DISPLAY = False#True
+  DO_PRINTS = False#True
   
   ###########################################################
   # Utility code from 
@@ -78,6 +78,8 @@ class CardRecognition(object):
   # Image Matching
   ###########################################################
   def preprocess(self,img):
+    if img is None:
+      print('N0Ne!')
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (5,5), 2)
     tws = 21
@@ -93,9 +95,9 @@ class CardRecognition(object):
     return cv2.GaussianBlur(img,(5,5),5)
 
 
-  def rotate180(self,img):
+  def rotate(self, img, deg):
     rows,cols = img.shape
-    M = cv2.getRotationMatrix2D((cols/2,rows/2),180,1)
+    M = cv2.getRotationMatrix2D((cols/2,rows/2),deg,1)
     dst = cv2.warpAffine(img,M,(cols,rows))
     return dst
   
@@ -110,8 +112,8 @@ class CardRecognition(object):
     return diff
   
   
-  def find_closest_card(self,img):
-    features = self.preprocess(img)
+  def find_closest_card(self,selection):
+    features = self.preprocess(selection)
     top_hits = sorted(self.training, key=lambda x:np.sum(self.imgdiff(x[1],features)))
     card = top_hits[0]
     match = card[0]
@@ -124,6 +126,8 @@ class CardRecognition(object):
       print('diff: {:.3f}% ({}/{})'.format(diffp, diff, summed) )
 
     if diffp > self.DIFFP_THRESH_VAL:
+      if self.DO_DISPLAY:
+        print('- closest to: {}'.format(match))
       return None
     else:
       if self.DO_DISPLAY:
@@ -137,8 +141,6 @@ class CardRecognition(object):
         #  cv2.waitKey(self.WIND_DELAY//4)
         cv2.imshow('difference', cv2.resize(self.imgdiff(card[1],features),self.WIND_SIZE))
         cv2.waitKey(self.WIND_DELAY*4)
-
-
       return match
 
   
@@ -200,11 +202,13 @@ class CardRecognition(object):
           cv2.imshow('camera input',cv2.resize(im,self.WIND_SIZE))
           cv2.waitKey(self.WIND_DELAY//10)
           #'''
-
+          
+      # Transform Image
       h = np.array([ [0,0],[449,0],[449,449],[0,449] ],np.float32)
       transform = cv2.getPerspectiveTransform(approx,h)
       warps.append(cv2.warpPerspective(im,transform,(450,450)))
-
+    #endfor
+      
     if bestmatch:
       return warps[0]
     elif numcards > 0 and len(warps) > numcards:
@@ -224,12 +228,14 @@ class CardRecognition(object):
     else:
       for i,filename in enumerate(os.listdir(path)):
         num, suit = filename[0], filename[1]
-        #print(filename)
+        print(filename)
         im = cv2.imread(os.path.join(path,filename))
-        c = self.extract_cards(im,bestmatch=True)[0]
+        c = self.extract_cards(im,bestmatch=True)
         c = self.preprocess(c)
         self.training.append( ((num,suit), c) )
-        self.training.append( ((num,suit), self.rotate180(c)) )
+        self.training.append( ((num,suit), self.rotate(c,90)) )
+        self.training.append( ((num,suit), self.rotate(c,180)) )
+        self.training.append( ((num,suit), self.rotate(c,270)) )
 
         if self.DO_PRINTS:
           print('{}'.format(i+1))
@@ -247,6 +253,7 @@ class CardRecognition(object):
 
     if self.DO_PRINTS:
       print('------')
+
     im = cv2.imread(filename)
       
     width = im.shape[0]
@@ -256,8 +263,8 @@ class CardRecognition(object):
       im = cv2.flip(im,1)
     
     '''
+    # Debug: uncomment to see registered images
     if self.DO_DISPLAY:
-      # Debug: uncomment to see registered images
       for i,c in enumerate(self.extract_cards(im,num_cards)):
         card = self.find_closest_card(c)
         cv2.imshow(str(card),c)
