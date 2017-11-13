@@ -14,6 +14,9 @@ game context (the player's hand, community cards, trump suit)
 
 ''' 
 
+import Card
+
+
 #
 # Given the trump suit, hand cards, and community cards,
 # recommend a plays for attacking or defending
@@ -26,7 +29,7 @@ class PlayRecommender(object):
     
     
     def __init__(self,trump):
-        if type(trump) is str and trump[0] in {'C','S','H','D'}: 
+        if type(trump) is str and trump[0] in Card.SUITS: 
             self.card_comp = CardComparator(trump)
         else:
             raise Exception('{} is not a legal suit'.format(trump[0]))
@@ -109,10 +112,10 @@ class PlayRecommender(object):
         
         addtl_attacks = []
         attacks = self.attack_advice()
-        for attack in attacks: # attack -> list of cards
-            for comm in self.comm: # comm -> a card
-                if self.card_comp.same_rank(attack[0], comm):
-                    addtl_attacks.append(attack)
+        for attk_cards in attacks: # attk_cards -> list of cards
+            for comm_card in self.comm: # comm_card -> a card
+                if self.card_comp.same_rank(attk_cards[0], comm_card):
+                    addtl_attacks.append(attk_cards)
                     break
         return addtl_attacks
         
@@ -208,9 +211,6 @@ class PlayRecommender(object):
 class CardComparator(object):
 
     trump = None
-    suits = {'C','S','H','D'}
-    rank_val = {'2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'X':10, 'J':11, 'Q':12, 'K':13, 'A':14}
-
     
     def __init__(self,trump):
         self.trump = trump
@@ -219,17 +219,17 @@ class CardComparator(object):
     # True if card is a trump card
     def is_trump_card(self,card):
         #print('{} vs. {}'.format(card[1][0], self.trump))
-        return card[1][0] == self.trump
+        return card.suit == self.trump
 
 
     # True if cards have same rank
     def same_rank(self, a, b):
-        return a[0][0] == b[0][0]
+        return a.rank == b.rank
 
     
     # True if cards have same suit
     def same_suit(self, a, b):
-        return a[1][0] == b[1][0]
+        return a.suit == b.suit
 
 
     # True if a beats b
@@ -247,10 +247,10 @@ class CardComparator(object):
 
         
     # sorting key
-    def _key_group_by_rank(self,gp): 
-        return ( self.rank_val[ gp[0][0][0] ] , len(gp) )
-        
+    def _key_group_by_rank(self,group): 
+        return ( group[0].value() , len(group) )
 
+    
     #
     # group up by rank
     # groups sorted by rank in preference of
@@ -271,7 +271,7 @@ class CardComparator(object):
                     skip = True
             # make new group
             if not skip:
-                gp = [ cd for cd in cds if cd[0] == card[0] ]
+                gp = [ cd for cd in cds if self.same_rank(cd,card) ]
                 if len(gp) > 1:
                     groups.append(gp)
 
@@ -307,10 +307,10 @@ class CardComparator(object):
     # sorting key
     def _key_card_by_rank_then_suit(self,card):
         if self.is_trump_card(card):
-            suit_val = 'Z'
+            suit_val = 'Z' # inflated trump suit value
         else:
-            suit_val = card[1][0]
-        return (self.rank_val[ card[0] ], suit_val)
+            suit_val = card.suit
+        return (card.value(), suit_val)
 
 
     #
@@ -349,14 +349,3 @@ class CardComparator(object):
         else:
             return ret
                 
-            
-            
-
-
-
-
-
-
-        
-        
-        
