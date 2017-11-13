@@ -153,7 +153,7 @@ class PlayRecommender(object):
         defends = []
         non_trumps, trumps = self.card_comp.split_out_trumps(self.hand)
         for cm in self.comm:
-            print(cm)
+            #print(cm)
             found = False
             # search among non-trump cards
             for ntc in non_trumps:
