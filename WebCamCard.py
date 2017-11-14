@@ -27,3 +27,5 @@ class CardCapture:
 #
 if __name__ == '__main__':
   me = CardCapture()
+  cards = me.get()
+  print(cards)

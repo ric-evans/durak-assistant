@@ -6,9 +6,9 @@ from WebCamCard import CardCapture
 
 from tkinter import *
 
-#MVC_Template_01
-#2014 May 23  by Steven Lipton http://makeAppPie.com
-#Controller initializing MVC -- simplest version possible.
+# MVC_Template_01
+# 2014 May 23  by Steven Lipton http://makeAppPie.com
+# Controller initializing MVC -- simplest version possible.
 
 #
 # A A Model-View-Controller framework for TKinter.
@@ -16,11 +16,24 @@ from tkinter import *
 # View : User interface elements. Controller can send messages to it. View can call methods from Controller when an event happens.
 # Controller: Ties View and Model together. turns UI responses into chages in data.
 
-#
+
+#Model: Data Structure.
+#   --Controller can send messages to it, and model can respond to message.
+#   --Uses delegates from vc to send messages to the Controll of internal change
+#   --NEVER communicates with View
+#   --Has setters and getters to communicate with Controller
+
+#View : User interface elements.
+#       --Controller can send messages to it.
+#       --View can call methods from Controller vc when an event happens.
+#       --NEVER communicates with Model.
+#       --Has setters and getters to communicate with controller
+    
 #Controller: Ties View and Model together.
 #       --Performs actions based on View events.
 #       --Sends messages to Model and View and gets responses
 #       --Has Delegates
+
 
 class MyController():
     def __init__(self,parent):
@@ -30,7 +43,7 @@ class MyController():
         print('Trump Suit: {}'.format(trump))
         self.view = Application(master=parent, vc=self)
         self.capture = CardCapture()
-        
+        self.view.update_trump(trump)
         
     # Event Handlers
     def add_hand_cards(self):
@@ -84,20 +97,6 @@ class MyController():
         print('---')
         self.view.update_advice(advc)
                 
-        
-#View : User interface elements.
-#       --Controller can send messages to it.
-#       --View can call methods from Controller vc when an event happens.
-#       --NEVER communicates with Model.
-#       --Has setters and getters to communicate with controller
-    
-        
-#Model: Data Structure.
-#   --Controller can send messages to it, and model can respond to message.
-#   --Uses delegates from vc to send messages to the Controll of internal change
-#   --NEVER communicates with View
-#   --Has setters and getters to communicate with Controller
-
 
 def main():
     root = Tk()

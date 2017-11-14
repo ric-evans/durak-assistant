@@ -1,7 +1,12 @@
-\
+'''
+Eric Evans
 
+The GUI. Interacts with Main/MyController through vc (View Controller)
+'''
 
+import yaml
 from tkinter import *
+
 
 class Application(Frame):
 
@@ -33,6 +38,9 @@ class Application(Frame):
         self.trump.grid(row=0, column=0, rowspan=1, columnspan=9, sticky=W+E+N+S)
         Label(self.trump, text='trump suit').pack()
 
+        self.trump_txt = StringVar()
+        Label(self.trump, textvariable=self.trump_txt).pack()
+        
         # Comm
         self.clear_comm = Button(self.master, text='X', command=self.vc.clear_comm).grid(row=1, column=0, rowspan=3, columnspan=1, sticky=W+E+N+S)
 
@@ -82,6 +90,9 @@ class Application(Frame):
 
     def update_advice(self,advc):
         self.advice_txt.set(str(advc))
+
+    def update_trump(self,tp):
+        self.trump_txt.set(tp)
 
         
 if __name__ == '__main__':        
