@@ -12,8 +12,16 @@ class Card:
     suit = 'C'
 
     def __init__(self,rank,suit):
-        self.rank = rank[0]
-        self.suit = suit[0]
+        if suit[0].capitalize() not in SUITS:
+            raise Exception('{} is not a valid suit'.format(suit))
+        else:
+            self.suit = suit[0].capitalize()
+
+        if rank.capitalize() not in VALUE.keys():
+            raise Exception('{} is not a valid rank'.format(rank))
+        else:
+            self.rank = rank.capitalize()
+
     
     def __getitem__(self,key):
         return self._list()[key]

@@ -1,6 +1,8 @@
 '''
 Author - Eric Evans
 
+aka Model
+
 This module handles game logic for the card game Durak, 
 from a player's perspective.
 Cards are 2-element tuple like ('5','H') (the five of hearts).
