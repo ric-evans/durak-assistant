@@ -103,4 +103,4 @@ ENV/
 # emacs backups
 *~
 
-./captures/*.png
+captures/*.png
