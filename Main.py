@@ -36,14 +36,14 @@ from tkinter import *
 
 
 class MyController():
+
+    trump_picked = False
+    
     def __init__(self,parent):
         self.parent = parent
-        trump = 'H'
-        self.model = PlayRecommender(trump)
-        print('Trump Suit: {}'.format(trump))
+        self.model = PlayRecommender()
         self.view = Application(master=parent, vc=self)
         self.capture = CardCapture()
-        self.view.update_trump(trump)
         
     # Event Handlers
     def add_hand_cards(self):
@@ -52,14 +52,14 @@ class MyController():
         self.model.add_to_hand(cards)
         print('Hand: {}'.format(self.model.hand))
         print('---')
-        self.view.update_hand(self.model.hand)
+        self.view.set_hand(self.model.hand)
 
     def clear_hand(self):
         print('Clear Hand')
         self.model.reset_hand()
         print('Hand: {}'.format(self.model.hand))
         print('---')
-        self.view.update_hand(self.model.hand)
+        self.view.set_hand(self.model.hand)
 
     def add_comm_cards(self):
         cards = self.capture.get()
@@ -67,37 +67,66 @@ class MyController():
         self.model.add_to_community(cards)
         print('Comm: {}'.format(self.model.comm))
         print('---')
-        self.view.update_comm(self.model.comm)
+        self.view.set_comm(self.model.comm)
         
     def clear_comm(self):
         print('Clear Comm')
         self.model.reset_community()
         print('Comm: {}'.format(self.model.comm))
         print('---')
-        self.view.update_comm(self.model.comm)
+        self.view.set_comm(self.model.comm)
         
     def defend(self):
         print('Defend')
-        advc = self.model.defend_advice()
-        print('Advice: {}'.format(advc))
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            advc = self.model.get_defend_advice()
+            print('Advice: {}'.format(advc))
+            self.view.set_defend_advice(advc)
         print('---')
-        self.view.update_advice(advc)
 
     def attack(self):
         print('Attack')
-        advc = self.model.attack_advice()
-        print('Advice: {}'.format(advc))
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            advc = self.model.get_attack_advice()
+            print('Advice: {}'.format(advc))
+            self.view.set_attack_advice(advc)
         print('---')
-        self.view.update_advice(advc)
 
     def fight(self):
         print('Fight')
-        advc = self.model.additional_attack_advice()
-        print('Advice: {}'.format(advc))
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            advc = self.model.get_additional_attack_advice()
+            print('Advice: {}'.format(advc))
+            self.view.set_fight_advice(advc)
         print('---')
-        self.view.update_advice(advc)
-                
 
+    def pick_hearts(self):
+        self.pick_trump('H')
+
+    def pick_spades(self):
+        self.pick_trump('S')
+
+    def pick_clubs(self):
+        self.pick_trump('C')
+
+    def pick_diamonds(self):
+        self.pick_trump('D')
+        
+    def pick_trump(self,suit):
+        self.trump_picked = True
+        print('Trump Changed to {}'.format(suit))
+        self.model.set_trump(suit)
+        print('---')
+        self.view.color_trump_buttons(trump=suit)
+
+
+        
 def main():
     root = Tk()
     app = MyController(root)

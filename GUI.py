@@ -10,10 +10,23 @@ import os
 
 GRAPHICS_DIR = './graphics/'
 
+
 class Application(Frame):
-
+    
     graphics = dict()
-
+    CANVAS_HEIGHT = 40
+    COLOR = {'dark_grey':'#272727',
+             'yellow':'#ffe400',
+             'green':'#14a76c',
+             'orange':'#ff652f',
+             'light_grey':'#747474',
+             'off_white':'#ececec'}
+    trump_buttons = dict()
+    advice_buttons = dict()
+    ADVICE_COLOR = {'Defend':COLOR['yellow'],
+                    'Attack':COLOR['green'],
+                    'Fight':COLOR['orange']}
+    
     
     def __init__(self, master=None, vc=None):
         Frame.__init__(self, master)
@@ -36,7 +49,7 @@ class Application(Frame):
         for r in range(15): # of rows
             self.master.rowconfigure(r, weight=1)
             
-        for c in range(9): # of columns
+        for c in range(12): # of columns
             self.master.columnconfigure(c, weight=1)
 
         # Add Frames
@@ -61,98 +74,192 @@ class Application(Frame):
         
     # Set Up Trump Controls
     def init_trump_frame(self):
+        # Trump Suit Label
         self.trump = Frame(self.master, bg='red')
         self.trump.pack_propagate(False)
-        self.trump.grid(row=0, column=0, rowspan=1, columnspan=9, sticky=W+E+N+S)
-        Label(self.trump, text='trump suit').pack()
+        self.trump.grid(row=0, column=0, rowspan=1, columnspan=12, sticky=W+E+N+S)
+        Label(self.trump, text='Trump Suit', bg=self.COLOR['light_grey']).pack(fill=X, side='bottom')
+        self.trump.configure(bg=self.COLOR['light_grey'], highlightthickness=0)
 
-        self.trump_txt = StringVar()
-        Label(self.trump, textvariable=self.trump_txt).pack()
+        # Hearts Button
+        self.trump_buttons['H'] = Button(self.master, text='H', command=self.vc.pick_hearts)
+        self.trump_buttons['H'].grid(row=1, column=0, rowspan=1, columnspan=3, sticky=W+E+N+S)
+        self.trump_buttons['H'].configure(highlightthickness=0, borderwidth=0)
+        #print(self.trump_buttons['H'].cget('activebackground'))
+
+        # Spades Button
+        self.trump_buttons['S'] = Button(self.master, text='S', command=self.vc.pick_spades)
+        self.trump_buttons['S'].grid(row=1, column=3, rowspan=1, columnspan=3, sticky=W+E+N+S)
+        self.trump_buttons['S'].configure(highlightthickness=0, borderwidth=0)
+
+        # Clubs Button
+        self.trump_buttons['C'] = Button(self.master, text='C', command=self.vc.pick_clubs)
+        self.trump_buttons['C'].grid(row=1, column=6, rowspan=1, columnspan=3, sticky=W+E+N+S)
+        self.trump_buttons['C'].configure(highlightthickness=0, borderwidth=0)
+
+        # Diamonds Button
+        self.trump_buttons['D'] = Button(self.master, text='D', command=self.vc.pick_diamonds)
+        self.trump_buttons['D'].grid(row=1, column=9, rowspan=1, columnspan=3, sticky=W+E+N+S)
+        self.trump_buttons['D'].configure(highlightthickness=0, borderwidth=0)
+
+        # Color Buttons
+        self.color_trump_buttons()
         
     # Set Up Comm Controls
     def init_comm_frame(self):
         # Clear Button
-        self.clear_comm = Button(self.master, text='X', command=self.vc.clear_comm).grid(row=1, column=0, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.clear_comm = Button(self.master, text='X', command=self.vc.clear_comm)
+        self.clear_comm.grid(row=2, column=0, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.clear_comm.configure(bg=self.COLOR['dark_grey'], highlightthickness=0, borderwidth=0)
         
         # Comm Frame
-        self.comm = Frame(self.master, bg='blue')
+        self.comm = Canvas(self.master, bg='blue', height=self.CANVAS_HEIGHT)
         self.comm.pack_propagate(False)
-        self.comm.grid(row=1, column=1, rowspan=3, columnspan=7, sticky=W+E+N+S)
-        Label(self.comm, text='community cards').pack()
-
-        self.comm_txt = StringVar()
-        Label(self.comm, textvariable=self.comm_txt).pack()
+        self.comm.grid(row=2, column=1, rowspan=3, columnspan=10, sticky=W+E+N+S)
+        Label(self.comm, text='Table Cards', bg=self.COLOR['dark_grey']).pack(fill=X)
+        self.comm.configure(bg=self.COLOR['dark_grey'], highlightthickness=0)
+        
+        #self.comm_txt = StringVar()
+        #Label(self.comm, textvariable=self.comm_txt).pack()
 
         # Add Button
-        self.add_comm = Button(self.master, text='+', command=self.vc.add_comm_cards).grid(row=1, column=8, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.add_comm = Button(self.master, text='+', command=self.vc.add_comm_cards)
+        self.add_comm.grid(row=2, column=11, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.add_comm.configure(bg=self.COLOR['dark_grey'], highlightthickness=0, borderwidth=0)
 
     # Set Up Hand Controls
     def init_hand_frame(self):
         # Clear Button
-        self.clear_hand = Button(self.master, text='X', command=self.vc.clear_hand).grid(row=4, column=0, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.clear_hand = Button(self.master, text='X', command=self.vc.clear_hand)
+        self.clear_hand.grid(row=5, column=0, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.clear_hand.configure(bg=self.COLOR['light_grey'], highlightthickness=0, borderwidth=0)
 
         # Hand Frame
         #scrl = Scrollbar(orient="horizontal")
-        self.hand = Frame(self.master, bg='green')#, xscrollcommand=scrl.set)
+        self.hand = Canvas(self.master, bg='green', height=self.CANVAS_HEIGHT)
         #self.hand.config(state=DISABLED)
         self.hand.pack_propagate(False)
-        self.hand.grid(row=4, column=1, rowspan=3, columnspan=7, sticky=W+E+N+S)
-        #Label(self.hand, text='hand cards').pack()
-
-        self.hand_txt = StringVar()
+        self.hand.grid(row=5, column=1, rowspan=3, columnspan=10, sticky=W+E+N+S)
+        Label(self.hand, text='Your Cards', bg=self.COLOR['light_grey']).pack(fill=X)
+        self.hand.configure(bg=self.COLOR['light_grey'], highlightthickness=0)
+        
+        #self.hand_txt = StringVar()
         #Label(self.hand, textvariable=self.hand_txt).pack()
 
         # Add Button
-        self.add_hand = Button(self.master, text='+', command=self.vc.add_hand_cards).grid(row=4, column=8, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.add_hand = Button(self.master, text='+', command=self.vc.add_hand_cards)
+        self.add_hand.grid(row=5, column=11, rowspan=3, columnspan=1, sticky=W+E+N+S)
+        self.add_hand.configure(bg=self.COLOR['light_grey'], highlightthickness=0, borderwidth=0)
         
         
     # Set Up Advice Controls
     def init_advice_frame(self):
         # Advice Frame
-        self.advice = Frame(self.master, bg='orange')
+        self.advice = Canvas(self.master, bg='orange', height=self.CANVAS_HEIGHT)
         self.advice.pack_propagate(False)
-        self.advice.grid(row=7, column=0, rowspan=5, columnspan=9, sticky=W+E+N+S)
-        Label(self.advice, text='best possible plays').pack()
+        self.advice.grid(row=8, column=0, rowspan=6, columnspan=12, sticky=W+E+N+S)
+        Label(self.advice, text='Your Best Possible Plays', bg=self.COLOR['dark_grey']).pack(fill=X)
+        self.advice.configure(bg=self.COLOR['dark_grey'], highlightthickness=0)
+        
+        #self.advice_txt = StringVar()
+        #Label(self.advice, textvariable=self.advice_txt).pack()
 
-        self.advice_txt = StringVar()
-        Label(self.advice, textvariable=self.advice_txt).pack()
-
+        button_row_span = 1
+        
         # Defend Button
-        self.defend = Button(self.master, text='Defend', command=self.vc.defend)
-        self.defend.grid(row=12, column=0, rowspan=3, columnspan=3, sticky=W+E+N+S)
-        self.defend.pack_propagate(False)
+        self.advice_buttons['Defend'] = Button(self.master, text='Defend', command=self.vc.defend)
+        self.advice_buttons['Defend'].grid(row=14, column=0, rowspan=button_row_span, columnspan=4, sticky=W+E+N+S)
+        self.advice_buttons['Defend'].pack_propagate(False)
+        self.advice_buttons['Defend'].configure(highlightthickness=0)
 
         # Attack Button
-        self.attack = Button(self.master, text='Attack', command=self.vc.attack)
-        self.attack.grid(row=12, column=3, rowspan=3, columnspan=3, sticky=W+E+N+S)
-        self.attack.pack_propagate(False)
+        self.advice_buttons['Attack'] = Button(self.master, text='Attack', command=self.vc.attack)
+        self.advice_buttons['Attack'].grid(row=14, column=4, rowspan=button_row_span, columnspan=4, sticky=W+E+N+S)
+        self.advice_buttons['Attack'].pack_propagate(False)
+        self.advice_buttons['Attack'].configure(highlightthickness=0)
         
         # Fight Button
-        self.fight = Button(self.master, text='Fight', command=self.vc.fight)
-        self.fight.grid(row=12, column=6, rowspan=3, columnspan=3, sticky=W+E+N+S)
-        self.fight.pack_propagate(False)
+        self.advice_buttons['Fight'] = Button(self.master, text='Fight', command=self.vc.fight)
+        self.advice_buttons['Fight'].grid(row=14, column=8, rowspan=button_row_span, columnspan=4, sticky=W+E+N+S)
+        self.advice_buttons['Fight'].pack_propagate(False)
+        self.advice_buttons['Fight'].configure(highlightthickness=0)
+
+        # Color Buttons
+        self.color_advice_buttons()
 
         
-    # Text Update Handlers
-    def update_hand(self,cards):
-        self.hand_txt.set(str(cards))
+    # receive new hand cards
+    def set_hand(self,cards):
+        #self.hand_txt.set(str(cards))
         Label(self.hand, image=self.graphics['2H']).pack(side=LEFT)
         Label(self.hand, image=self.graphics['5D']).pack(side=LEFT)
         Label(self.hand, image=self.graphics['AS']).pack(side=LEFT)
         Label(self.hand, image=self.graphics['2H']).pack(side=LEFT)
         Label(self.hand, image=self.graphics['5D']).pack(side=LEFT)
         Label(self.hand, image=self.graphics['AS']).pack(side=LEFT)
-        self.update_advice('')
+        #self.update_advice('')
+        self.color_advice_buttons()
+
+    # recieve new comm cards
+    def set_comm(self,cards):
+        #self.comm_txt.set(str(cards))
+        Label(self.comm, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.comm, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.comm, image=self.graphics['AS']).pack(side=LEFT)
+        Label(self.comm, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.comm, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.comm, image=self.graphics['AS']).pack(side=LEFT)
+        #self.update_advice('')
+        self.color_advice_buttons()
+
+    # receive defending advice
+    def set_defend_advice(self,cards):
+        self.color_advice_buttons('Defend')
+        print(cards)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+
+    # receive attacking advice
+    def set_attack_advice(self,cards):
+        self.color_advice_buttons('Attack')
+        print(cards)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+
+    # receive fighting advice
+    def set_fight_advice(self,cards):
+        self.color_advice_buttons('Fight')
+        print(cards)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
+        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
         
-    def update_comm(self,cards):
-        self.comm_txt.set(str(cards))
-        self.update_advice('')
+    # 'Press' down trump suit button, 'Raise' the others
+    def color_trump_buttons(self, trump=None):
+        for suit,button in self.trump_buttons.items():
+            if trump and suit == trump:
+                button.configure(bg=self.COLOR['off_white'])
+            else:
+                button.configure(bg=self.COLOR['light_grey'])
 
-    def update_advice(self,advc):
-        self.advice_txt.set(str(advc))
-
-    def update_trump(self,tp):
-        self.trump_txt.set(tp)
+    # 'Press' down select advice button, 'Raise' the others
+    def color_advice_buttons(self, advice=None):
+        for name,button in self.advice_buttons.items():
+            if advice and name != advice:
+                button.configure(bg=self.COLOR['light_grey'])
+            else:
+                button.configure(bg=self.ADVICE_COLOR[name])
 
         
 if __name__ == '__main__':        

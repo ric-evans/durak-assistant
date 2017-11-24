@@ -29,8 +29,8 @@ class PlayRecommender(object):
     comm = None
     card_comp = None
     
-    
-    def __init__(self,trump):
+    # set trump suit
+    def set_trump(self,trump):
         if type(trump) is str and trump[0] in Card.SUITS: 
             self.card_comp = CardComparator(trump)
         else:
@@ -108,12 +108,12 @@ class PlayRecommender(object):
     # return attack_advice() where all attacks have
     # the same rank as a community card
     #
-    def additional_attack_advice(self):
+    def get_additional_attack_advice(self):
         if not self.hand or not self.comm:
             return None
         
         addtl_attacks = []
-        attacks = self.attack_advice()
+        attacks = self.get_attack_advice()
         for attk_cards in attacks: # attk_cards -> list of cards
             for comm_card in self.comm: # comm_card -> a card
                 if self.card_comp.same_rank(attk_cards[0], comm_card):
@@ -127,7 +127,7 @@ class PlayRecommender(object):
     #           'defend': [ ( (card_defend),(card_comm) ),... ] }
     # of best defense moves
     #
-    def defend_advice(self,include_unbeatables=False):
+    def get_defend_advice(self,include_unbeatables=False):
         if not self.hand or not self.comm:
             return None
 
@@ -200,7 +200,7 @@ class PlayRecommender(object):
     # return a [ [ (card),... ],... ] of possible attacks
     # in best play order
     #
-    def attack_advice(self):
+    def get_attack_advice(self):
         if self.hand:
             return self.card_comp.group_up(self.hand)
         else:
