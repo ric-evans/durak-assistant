@@ -10,7 +10,7 @@ import os
 from pygame.locals import *
 
 
-DEVICE = '/dev/video1'
+DEVICE = '/dev/video2'
 SIZE = (640, 480)
 DIR = './captures'
 

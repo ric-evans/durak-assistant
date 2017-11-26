@@ -7,7 +7,8 @@ The GUI. Interacts with Main/MyController through vc (View Controller)
 import yaml
 from tkinter import *
 import os
-import tkinter.font as tkf
+from Card import Card
+
 GRAPHICS_DIR = './graphics/'
 
 
@@ -202,33 +203,44 @@ class Application(Frame):
 
         
     # receive new hand cards
-    def set_hand(self,cards):
-        #self.hand_txt.set(str(cards))
-        Label(self.hand, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.hand, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.hand, image=self.graphics['AS']).pack(side=LEFT)
-        Label(self.hand, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.hand, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.hand, image=self.graphics['AS']).pack(side=LEFT)
-        #self.update_advice('')
+    def set_hand(self, cards):
+        #cards = [Card('X','H'), Card('3','D')]
+        self._draw_list_cards(cards,self.hand)
         self.color_advice_buttons()
 
     # recieve new comm cards
     def set_comm(self,cards):
-        #self.comm_txt.set(str(cards))
-        Label(self.comm, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.comm, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.comm, image=self.graphics['AS']).pack(side=LEFT)
-        Label(self.comm, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.comm, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.comm, image=self.graphics['AS']).pack(side=LEFT)
-        #self.update_advice('')
+        self._draw_list_cards(cards, self.comm)
         self.color_advice_buttons()
+        
+    # draw cards on canvas in an overlapping fashion, returning to new line after row_amt
+    def _draw_list_cards(self, cards, canvas):
+        if not cards or len(cards) < 1:
+            canvas.delete('all')
+            return
+        
+        cards = [c.short() for c in cards]
+        x = 0
+        y = 22
+        x_shift = 20.8
+        y_shift = 43
+        row_amt = 11
+        col = 0
+        
+        for c in cards:
+            if col > row_amt:
+                col = 0
+                y = y + y_shift
+                x = 0
+            canvas.create_image(x, y, anchor=NW, image=self.graphics[c] )
+            x = x + x_shift
+            col = col + 1
 
+            
     # receive defending advice
     def set_defend_advice(self,cards):
         self.color_advice_buttons('Defend')
-        print(cards)
+        #print(cards)
         Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
@@ -239,7 +251,7 @@ class Application(Frame):
     # receive attacking advice
     def set_attack_advice(self,cards):
         self.color_advice_buttons('Attack')
-        print(cards)
+        #print(cards)
         Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
@@ -250,7 +262,7 @@ class Application(Frame):
     # receive fighting advice
     def set_fight_advice(self,cards):
         self.color_advice_buttons('Fight')
-        print(cards)
+        #print(cards)
         Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
         Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)

@@ -40,3 +40,9 @@ class Card:
 
     def value(self):
         return VALUE[self.rank]
+
+    def short(self):
+        return '{}{}'.format(self.rank,self.suit)
+
+
+    
