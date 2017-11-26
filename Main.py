@@ -47,34 +47,52 @@ class MyController():
         
     # Event Handlers
     def add_hand_cards(self):
-        cards = self.capture.get()
-        print('Add to Hand: {}'.format(cards))
-        self.model.add_to_hand(cards)
-        print('Hand: {}'.format(self.model.hand))
+        print('Add Hand')
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            cards = self.capture.get()
+            print('Add to Hand: {}'.format(cards))
+            self.model.add_to_hand(cards)
+            print('Hand: {}'.format(self.model.hand))
+            self.view.set_hand(self.model.hand)
+            self.view.clear_advice()
         print('---')
-        self.view.set_hand(self.model.hand)
 
     def clear_hand(self):
         print('Clear Hand')
-        self.model.reset_hand()
-        print('Hand: {}'.format(self.model.hand))
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            self.model.reset_hand()
+            print('Hand: {}'.format(self.model.hand))
+            self.view.set_hand(self.model.hand)
+            self.view.clear_advice()
         print('---')
-        self.view.set_hand(self.model.hand)
 
     def add_comm_cards(self):
-        cards = self.capture.get()
-        print('Add to Comm: {}'.format(cards))
-        self.model.add_to_community(cards)
-        print('Comm: {}'.format(self.model.comm))
+        print('Add Comm')
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            cards = self.capture.get()
+            print('Add to Comm: {}'.format(cards))
+            self.model.add_to_community(cards)
+            print('Comm: {}'.format(self.model.comm))
+            self.view.set_comm(self.model.comm)
+            self.view.clear_advice()
         print('---')
-        self.view.set_comm(self.model.comm)
         
     def clear_comm(self):
         print('Clear Comm')
-        self.model.reset_community()
-        print('Comm: {}'.format(self.model.comm))
+        if not self.trump_picked:
+            print('ERROR: Trump Suit not Defined')
+        else:
+            self.model.reset_community()
+            print('Comm: {}'.format(self.model.comm))
+            self.view.set_comm(self.model.comm)
+            self.view.clear_advice()
         print('---')
-        self.view.set_comm(self.model.comm)
         
     def defend(self):
         print('Defend')

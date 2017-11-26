@@ -9,12 +9,14 @@ from tkinter import *
 import os
 from Card import Card
 
-GRAPHICS_DIR = './graphics/'
+GRAPHICS_DIR = './graphics/big/'
+SMALL_GRAPHICS_DIR = './graphics/small/'
 
 
 class Application(Frame):
     
     graphics = dict()
+    small_graphics = dict()
     trump_buttons = dict()
     advice_buttons = dict()
     CANVAS_HEIGHT = 40
@@ -75,13 +77,20 @@ class Application(Frame):
 
 
     # load all graphics from GRAPHICS_DIR into self.graphics
+    # and from SMALL_GRAPHICS_DIR into self.small_graphics
     def load_graphics(self):
         for card_file in os.listdir(GRAPHICS_DIR):
             full_path = os.path.join(GRAPHICS_DIR,card_file)
             photo = PhotoImage(file=full_path)
             card_name = os.path.splitext(card_file)[0]
             self.graphics[card_name] = photo
+        for card_file in os.listdir(SMALL_GRAPHICS_DIR):
+            full_path = os.path.join(SMALL_GRAPHICS_DIR,card_file)
+            photo = PhotoImage(file=full_path)
+            card_name = os.path.splitext(card_file)[0]
+            self.small_graphics[card_name] = photo
         #print(self.graphics)
+        #print(self.small_graphics)
         
         
     # Set Up Trump Controls
@@ -117,6 +126,7 @@ class Application(Frame):
         
         # Color Buttons
         self.color_trump_buttons()
+
         
     # Set Up Comm Controls
     def init_comm_frame(self):
@@ -140,6 +150,7 @@ class Application(Frame):
         self.add_comm.grid(row=2, column=11, rowspan=3, columnspan=1, sticky=W+E+N+S)
         self.add_comm.configure(bg=self.COLOR['dark_grey'], highlightthickness=0, borderwidth=0)
 
+        
     # Set Up Hand Controls
     def init_hand_frame(self):
         # Clear Button
@@ -208,15 +219,23 @@ class Application(Frame):
         self._draw_list_cards(cards,self.hand)
         self.color_advice_buttons()
 
+        
     # recieve new comm cards
     def set_comm(self,cards):
         self._draw_list_cards(cards, self.comm)
         self.color_advice_buttons()
+
+        
+    # clear the advice canvas
+    def clear_advice(self):
+        self.advice.delete('all')
+        
         
     # draw cards on canvas in an overlapping fashion, returning to new line after row_amt
     def _draw_list_cards(self, cards, canvas):
+        canvas.delete('all')
+        
         if not cards or len(cards) < 1:
-            canvas.delete('all')
             return
         
         cards = [c.short() for c in cards]
@@ -240,36 +259,71 @@ class Application(Frame):
     # receive defending advice
     def set_defend_advice(self,cards):
         self.color_advice_buttons('Defend')
-        #print(cards)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        cards = (False,
+                 {'defend': [(Card('3', 'H'), Card('8', 'D')),
+                             (Card('4', 'H'), Card('X', 'D'))],
+                  'pass': [Card('8', 'S'),
+                           Card('8', 'H')]
+                 })
+        self._draw_defense_cards(cards)
 
+
+    # draw cards:
+    # defend -> in vt overlapping 'this beats that' fashion
+    # pass -> in hz overlapping fashion 
+    def _draw_defense_cards(self, dicto):
+        self.clear_advice()
+
+        if not dicto or len(dicto) < 1:
+            return
+
+        # check if play is winnable
+        if not dicto[0]:
+            print('Not Winnable')
+            self.advice.create_text(150, 75, text='Play Is Not Winnable', fill=self.TEXT_COLOR)
+            return
+
+        
+
+
+            
+        
     # receive attacking advice
     def set_attack_advice(self,cards):
         self.color_advice_buttons('Attack')
-        #print(cards)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        self._draw_offense_cards(cards)
+
 
     # receive fighting advice
     def set_fight_advice(self,cards):
         self.color_advice_buttons('Fight')
-        #print(cards)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['2H']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['5D']).pack(side=LEFT)
-        Label(self.advice, image=self.graphics['AS']).pack(side=LEFT)
+        self._draw_offense_cards(cards)
+
         
+    # draw cards, vertically overlapping if a multi-card move
+    def _draw_offense_cards(self, cards):
+        self.clear_advice()
+        cards = [[Card('8', 'S')],[Card('Q', 'C')],[Card('8', 'S'), Card('8', 'H'), Card('8', 'D')],[Card('3', 'H')],[Card('8', 'H')]]
+        if not cards or len(cards) < 1:
+            return
+        
+        cards = [ [c.short() for c in cds] for cds in cards]
+        print(cards)
+        x = 0
+        y = 35
+        x_shift = 40
+        y_shift = 20
+        
+        for i,c_gp in enumerate(cards):
+            self.advice.create_text(x+25, y-7, text=str(i+1), fill=self.TEXT_COLOR)
+            y_tmp = y
+            for c in c_gp:
+                img = self.small_graphics[c]
+                self.advice.create_image(x, y_tmp, anchor=NW, image=img)
+                y_tmp = y_tmp + y_shift
+            x = x + x_shift
+
+
     # 'Press' down trump suit button, 'Raise' the others
     def color_trump_buttons(self, trump=None):
         for suit,button in self.trump_buttons.items():
@@ -281,6 +335,7 @@ class Application(Frame):
                 else:
                     button.configure(bg=self.COLOR['grey'], fg=self.COLOR['light_grey'])
 
+                    
     # 'Press' down select advice button, 'Raise' the others
     def color_advice_buttons(self, advice=None):
         for name,button in self.advice_buttons.items():
@@ -289,6 +344,7 @@ class Application(Frame):
             else:
                 button.configure(bg=self.ADVICE_COLOR[name], fg=self.COLOR['black'])
 
+                
         
 if __name__ == '__main__':        
     root = Tk()
@@ -296,3 +352,6 @@ if __name__ == '__main__':
     app.mainloop()
     
                 
+
+
+
