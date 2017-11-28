@@ -49,7 +49,7 @@ class MyController():
     def add_hand_cards(self):
         print('Add Hand')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             cards = self.capture.get()
             print('Add to Hand: {}'.format(cards))
@@ -62,7 +62,7 @@ class MyController():
     def clear_hand(self):
         print('Clear Hand')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             self.model.reset_hand()
             print('Hand: {}'.format(self.model.hand))
@@ -73,7 +73,7 @@ class MyController():
     def add_comm_cards(self):
         print('Add Comm')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             cards = self.capture.get()
             print('Add to Comm: {}'.format(cards))
@@ -86,7 +86,7 @@ class MyController():
     def clear_comm(self):
         print('Clear Comm')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             self.model.reset_community()
             print('Comm: {}'.format(self.model.comm))
@@ -97,7 +97,7 @@ class MyController():
     def defend(self):
         print('Defend')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             advc = self.model.get_defend_advice()
             print('Advice: {}'.format(advc))
@@ -107,7 +107,7 @@ class MyController():
     def attack(self):
         print('Attack')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             advc = self.model.get_attack_advice()
             print('Advice: {}'.format(advc))
@@ -117,13 +117,16 @@ class MyController():
     def fight(self):
         print('Fight')
         if not self.trump_picked:
-            print('ERROR: Trump Suit not Defined')
+            self.no_trump()
         else:
             advc = self.model.get_additional_attack_advice()
             print('Advice: {}'.format(advc))
             self.view.set_fight_advice(advc)
         print('---')
 
+    def no_trump(self):
+        print('ERROR: Trump Suit not Defined')
+        
     def pick_hearts(self):
         self.pick_trump('H')
 
@@ -142,7 +145,8 @@ class MyController():
         self.model.set_trump(suit)
         print('---')
         self.view.color_trump_buttons(trump=suit)
-
+        self.view.clear_advice()
+        self.view.color_advice_buttons()
 
         
 def main():

@@ -7,6 +7,7 @@ The GUI. Interacts with Main/MyController through vc (View Controller)
 import yaml
 from tkinter import *
 import os
+import time
 from Card import Card
 
 GRAPHICS_DIR = './graphics/big/'
@@ -40,6 +41,9 @@ class Application(Frame):
     FONT = 'Ubuntu 13 bold'
     SUIT_FONT = 'Ubuntu 27 bold'
     SCAN_FONT = 'Ubuntu 20 bold'
+
+    flick_suit = 0
+    flick = False
     
     
     def __init__(self, master=None, vc=None):
@@ -257,37 +261,85 @@ class Application(Frame):
 
             
     # receive defending advice
-    def set_defend_advice(self,cards):
+    def set_defend_advice(self,advice_tuple):
         self.color_advice_buttons('Defend')
-        cards = (False,
+
+        # uncomment to test canvas drawing
+        '''
+        advice_tuple = (True,
                  {'defend': [(Card('3', 'H'), Card('8', 'D')),
                              (Card('4', 'H'), Card('X', 'D'))],
                   'pass': [Card('8', 'S'),
                            Card('8', 'H')]
                  })
-        self._draw_defense_cards(cards)
+        '''
+
+        self._draw_defense_cards(advice_tuple)
 
 
     # draw cards:
     # defend -> in vt overlapping 'this beats that' fashion
-    # pass -> in hz overlapping fashion 
-    def _draw_defense_cards(self, dicto):
+    # pass -> in hz overlapping fashion
+    # advice tuple ->
+    # (Bool,
+    #   {'pass'  : [(card_pass),...],
+    #    'defend': [ ( (card_defend),(card_comm) ),... ] }
+    # )
+    def _draw_defense_cards(self, advice_tuple):
         self.clear_advice()
 
-        if not dicto or len(dicto) < 1:
+        if not advice_tuple or len(advice_tuple) < 1:
             return
 
         # check if play is winnable
-        if not dicto[0]:
+        if not advice_tuple[0]:
             print('Not Winnable')
             self.advice.create_text(150, 75, text='Play Is Not Winnable', fill=self.TEXT_COLOR)
-            return
+        else:
+            print('Winnable')
 
-        
+        # Grab play moves dict with pass and defend
+        plays = advice_tuple[1]
 
+        # Defending Plays
+        if 'defend' in plays.keys():
+            defend_duos = [ (d.short(),c.short()) for d,c in plays['defend'] ]
+            print('Defend with {}'.format(defend_duos))
+
+            # Draw 
+            x = 0
+            y = 25
+            x_shift = 40
+            y_shift = 20
+            
+            for d,c in defend_duos:
+                self.advice.create_image(x, y, anchor=NW, image=self.small_graphics[c])
+                self.advice.create_image(x, y+y_shift, anchor=NW, image=self.small_graphics[d])
+                x = x + x_shift
+                
+        else:
+            print('Cannot Defend')
+            
+        # Passing Plays
+        if 'pass' in plays.keys():
+            pass_list = [ c.short() for c in plays['pass'] ]
+            print('Pass with {}'.format(pass_list))
+
+            # Draw
+            x = 0
+            y = 145
+            x_shift = 40
+            y_shift = 20
+
+            self.advice.create_text(x+40, y-8, text='Pass Options', fill=self.TEXT_COLOR)
+            
+            for p in pass_list:
+                self.advice.create_image(x, y, anchor=NW, image=self.small_graphics[p])
+                x = x + x_shift
+        else:
+            print('Cannot Pass')
 
             
-        
     # receive attacking advice
     def set_attack_advice(self,cards):
         self.color_advice_buttons('Attack')
@@ -301,9 +353,16 @@ class Application(Frame):
 
         
     # draw cards, vertically overlapping if a multi-card move
+    # cards ->
+    # [ [ (card),... ],... ]
     def _draw_offense_cards(self, cards):
         self.clear_advice()
+
+        # uncomment to test canvas drawing
+        '''
         cards = [[Card('8', 'S')],[Card('Q', 'C')],[Card('8', 'S'), Card('8', 'H'), Card('8', 'D')],[Card('3', 'H')],[Card('8', 'H')]]
+        '''
+
         if not cards or len(cards) < 1:
             return
         
@@ -315,7 +374,13 @@ class Application(Frame):
         y_shift = 20
         
         for i,c_gp in enumerate(cards):
-            self.advice.create_text(x+25, y-7, text=str(i+1), fill=self.TEXT_COLOR)
+            r = i+1
+            if r == 1: ranking = '1st'
+            elif r == 2: ranking = '2nd'
+            elif r == 3: ranking = '3rd'
+            else: ranking = '{}th'.format(r)
+                
+            self.advice.create_text(x+25, y-7, text=ranking, fill=self.TEXT_COLOR)
             y_tmp = y
             for c in c_gp:
                 img = self.small_graphics[c]
@@ -344,7 +409,7 @@ class Application(Frame):
             else:
                 button.configure(bg=self.ADVICE_COLOR[name], fg=self.COLOR['black'])
 
-                
+                          
         
 if __name__ == '__main__':        
     root = Tk()
