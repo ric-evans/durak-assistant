@@ -10,7 +10,8 @@ import os
 from pygame.locals import *
 
 
-DEVICE = '/dev/video2'
+DEVICE_STUB = '/dev/video'
+DEV_BASE = 1
 SIZE = (640, 480)
 DIR = './captures'
 
@@ -51,8 +52,18 @@ class Snapshot(object):
     def _start(self):        
         self.display = pygame.display.set_mode(SIZE, 0)
         pygame.display.set_caption('Scanning Screen')
-        self.camera = pygame.camera.Camera(DEVICE, SIZE)
-        self.camera.start()
+
+        i = DEV_BASE
+        again = True
+        while again:
+            try:
+                device = '{}{}'.format(DEVICE_STUB,i)
+                print('trying {}'.format(device))
+                self.camera = pygame.camera.Camera(device, SIZE)
+                self.camera.start()
+                again = False
+            except:
+                i = i + 1
         
         return pygame.surface.Surface(SIZE, 0, self.display)
     

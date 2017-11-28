@@ -38,6 +38,9 @@ from tkinter import *
 class MyController():
 
     trump_picked = False
+    last_hand = None
+    last_comm = None
+    last_play_func = None
     
     def __init__(self,parent):
         self.parent = parent
@@ -52,12 +55,17 @@ class MyController():
             self.no_trump()
         else:
             cards = self.capture.get()
-            print('Add to Hand: {}'.format(cards))
-            self.model.add_to_hand(cards)
-            print('Hand: {}'.format(self.model.hand))
-            self.view.set_hand(self.model.hand)
-            self.view.clear_advice()
+            self._add_hand(cards)
+            self.reset_advice()
         print('---')
+
+    def _add_hand(self, cards):
+        if cards is None: return
+        print('Add to Hand: {}'.format(cards))
+        self.model.add_to_hand(cards)
+        print('Hand: {}'.format(self.model.hand))
+        self.view.set_hand(self.model.hand)
+        self.last_hand = cards
 
     def clear_hand(self):
         print('Clear Hand')
@@ -67,8 +75,9 @@ class MyController():
             self.model.reset_hand()
             print('Hand: {}'.format(self.model.hand))
             self.view.set_hand(self.model.hand)
-            self.view.clear_advice()
+            self.reset_advice()
         print('---')
+        self.last_hand = None
 
     def add_comm_cards(self):
         print('Add Comm')
@@ -76,12 +85,17 @@ class MyController():
             self.no_trump()
         else:
             cards = self.capture.get()
-            print('Add to Comm: {}'.format(cards))
-            self.model.add_to_community(cards)
-            print('Comm: {}'.format(self.model.comm))
-            self.view.set_comm(self.model.comm)
-            self.view.clear_advice()
+            self._add_comm(cards)
+            self.reset_advice()
         print('---')
+
+    def _add_comm(self,cards):
+        if cards is None: return
+        print('Add to Comm: {}'.format(cards))
+        self.model.add_to_community(cards)
+        print('Comm: {}'.format(self.model.comm))
+        self.view.set_comm(self.model.comm)
+        self.last_comm = cards
         
     def clear_comm(self):
         print('Clear Comm')
@@ -91,8 +105,9 @@ class MyController():
             self.model.reset_community()
             print('Comm: {}'.format(self.model.comm))
             self.view.set_comm(self.model.comm)
-            self.view.clear_advice()
+            self.reset_advice()
         print('---')
+        self.last_comm = None
         
     def defend(self):
         print('Defend')
@@ -103,6 +118,7 @@ class MyController():
             print('Advice: {}'.format(advc))
             self.view.set_defend_advice(advc)
         print('---')
+        self.last_play_func = self.defend
 
     def attack(self):
         print('Attack')
@@ -113,6 +129,7 @@ class MyController():
             print('Advice: {}'.format(advc))
             self.view.set_attack_advice(advc)
         print('---')
+        self.last_play_func = self.attack
 
     def fight(self):
         print('Fight')
@@ -123,7 +140,12 @@ class MyController():
             print('Advice: {}'.format(advc))
             self.view.set_fight_advice(advc)
         print('---')
+        self.last_play_func = self.fight
 
+    def reset_advice(self):
+        self.last_play_func = None
+        self.view.clear_advice()
+        
     def no_trump(self):
         print('ERROR: Trump Suit not Defined')
         
@@ -147,8 +169,11 @@ class MyController():
         self.view.color_trump_buttons(trump=suit)
         self.view.clear_advice()
         self.view.color_advice_buttons()
-
-        
+        self._add_comm(self.last_comm)
+        self._add_hand(self.last_hand)
+        if self.last_play_func:
+            self.last_play_func()
+            
 def main():
     root = Tk()
     app = MyController(root)
