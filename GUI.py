@@ -41,10 +41,9 @@ class Application(Frame):
     FONT = 'Ubuntu 13 bold'
     SUIT_FONT = 'Ubuntu 27 bold'
     SCAN_FONT = 'Ubuntu 20 bold'
-
-    flick_suit = 0
-    flick = False
     
+    X_ADVICE_DRAW_OFFSET = 10
+
     
     def __init__(self, master=None, vc=None):
         Frame.__init__(self, master)
@@ -143,7 +142,7 @@ class Application(Frame):
         self.comm = Canvas(self.master, bg='blue', height=self.CANVAS_HEIGHT)
         self.comm.pack_propagate(False)
         self.comm.grid(row=2, column=1, rowspan=3, columnspan=10, sticky=W+E+N+S)
-        Label(self.comm, text='Table Cards', fg=self.TEXT_COLOR, bg=self.COLOR['dark_grey'], font=self.FONT).pack(fill=X)
+        Label(self.comm, text='Community Cards', fg=self.TEXT_COLOR, bg=self.COLOR['dark_grey'], font=self.FONT).pack(fill=X)
         self.comm.configure(bg=self.COLOR['dark_grey'], highlightthickness=0)
         
         #self.comm_txt = StringVar()
@@ -169,7 +168,7 @@ class Application(Frame):
         #self.hand.config(state=DISABLED)
         self.hand.pack_propagate(False)
         self.hand.grid(row=5, column=1, rowspan=3, columnspan=10, sticky=W+E+N+S)
-        Label(self.hand, text='Your Cards', fg=self.TEXT_COLOR, bg=self.COLOR['grey'], font=self.FONT).pack(fill=X)
+        Label(self.hand, text='Your Hand', fg=self.TEXT_COLOR, bg=self.COLOR['grey'], font=self.FONT).pack(fill=X)
         self.hand.configure(bg=self.COLOR['grey'], highlightthickness=0)
         
         #self.hand_txt = StringVar()
@@ -307,7 +306,7 @@ class Application(Frame):
             print('Defend with {}'.format(defend_duos))
 
             # Draw 
-            x = 0
+            x = self.X_ADVICE_DRAW_OFFSET
             y = 25
             x_shift = 40
             y_shift = 20
@@ -326,7 +325,7 @@ class Application(Frame):
             print('Pass with {}'.format(pass_list))
 
             # Draw
-            x = 0
+            x = self.X_ADVICE_DRAW_OFFSET
             y = 145
             x_shift = 40
             y_shift = 20
@@ -368,7 +367,7 @@ class Application(Frame):
         
         cards = [ [c.short() for c in cds] for cds in cards]
         print(cards)
-        x = 0
+        x = self.X_ADVICE_DRAW_OFFSET
         y = 35
         x_shift = 40
         y_shift = 20

@@ -159,7 +159,7 @@ class CardRecognition(object):
   # card recognition code from:
   # http://arnab.org/blog/so-i-suck-24-automating-card-games-using-opencv-and-python
   ###############################################################################  
-  def extract_cards(self, im, numcards=0, bestmatch=False, maxcards=10):
+  def extract_cards(self, im, numcards=0, bestmatch=False, maxcards=5):
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray,(1,1),1000)
     flag, thresh = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY) 

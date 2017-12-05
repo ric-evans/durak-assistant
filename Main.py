@@ -3,7 +3,7 @@
 from DurakLogic import *
 from GUI import Application
 from WebCamCard import CardCapture
-
+from Card import Card
 from tkinter import *
 
 # MVC_Template_01
@@ -55,6 +55,7 @@ class MyController():
             self.no_trump()
         else:
             cards = self.capture.get()
+            #cards = [ Card('8','H'), Card('3','H'), Card('8','S'), Card('Q','C') ] #######################
             self._add_hand(cards)
             self.reset_advice()
         print('---')
@@ -85,6 +86,7 @@ class MyController():
             self.no_trump()
         else:
             cards = self.capture.get()
+            #cards = [ Card('J','C'), Card('8','C'), Card('8','D') ] #################
             self._add_comm(cards)
             self.reset_advice()
         print('---')

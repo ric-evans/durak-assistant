@@ -72,7 +72,7 @@ class PlayRecommender(object):
     #
     def add_to_hand(self,cards):
         if self.hand:
-            set_list = list( set(self.hand + cards) )
+            set_list = list( self.card_comp.card_set(self.hand + cards) )
             self._set_hand(set_list)
         else:
             self._set_hand(cards)
@@ -83,7 +83,7 @@ class PlayRecommender(object):
     #
     def add_to_community(self,cards):
         if self.comm:
-            set_list = list( set(self.comm + cards) )
+            set_list = list( self.card_comp.card_set(self.comm + cards) )
             self._set_community(set_list)
         else:
             self._set_community(cards)
@@ -350,4 +350,18 @@ class CardComparator(object):
             return ret.reverse()
         else:
             return ret
-                
+
+        
+    #
+    # return a set of the incoming list of cards
+    #
+    def card_set(self, cards):
+        cs = set()
+        for card in cards:
+            if not cs or not card.short() in [c.short() for c in cs]:
+                cs.add(card)
+        return cs
+
+        
+
+        
