@@ -8,7 +8,7 @@ ipython-genutils==0.2.0
 jedi==0.11.0
 Kivy-Garden==0.1.4
 numpy==1.13.3
-opencv-python==3.3.0.10
+opencv-python==3.4.7.28
 parso==0.1.0
 pexpect==4.2.1
 pickleshare==0.7.4
